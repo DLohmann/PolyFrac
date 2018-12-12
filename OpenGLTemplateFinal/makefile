@@ -15,9 +15,9 @@ CC       = g++
 CFLAGS   = -w $(OPTFLAGS) -ISOIL/includes -std=c++11
 
 ifeq ($(strip $(OS)),Darwin)
-	LDFLAGS = -framework CoreFoundation -framework GLUT -framework OpenGL -LSOIL/lib/macOS -lSOIL
+	LDFLAGS = -framework CoreFoundation -framework GLUT -framework OpenGL -LSOIL/lib/macOS -lSOIL -lpthread
 else
-	LDFLAGS = -lGL -lglut -lGLU -LSOIL/lib/ubuntu -lSOIL 
+	LDFLAGS = -lGL -lglut -lGLU -LSOIL/lib/ubuntu -lSOIL -lpthread
 endif
 
 #######################################################################
