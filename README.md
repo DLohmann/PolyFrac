@@ -30,3 +30,9 @@ Once in a while, the rate at which fractal points are placed increases dramatica
 
 This readme file was taken from the project specifications at this link:
 https://docs.google.com/document/d/1cf45kmz3oNQ7RqiqdlUyD_tw7w5lOnuN8sXz_nvTblA/edit?usp=sharing
+
+
+# TO DO:
+- Create a CMakeLists.txt file to compile the template on different systems using CMake.
+- Add code to place the user-generated "attractor" points.
+- Randomly generate the "fractal" points.
