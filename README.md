@@ -1,6 +1,7 @@
 # PolyFrac
 
-## Game Description: This is a game to play with fractals and teach about the math behind attractor systems. The user places “attractor” points on the screen, which the program uses to create fractals. The more spread out the points are from each other, the more points the user gets. The fractals are generated when the computer randomly generates “fractal” points around the user’s “attractor” points. The program also randomly generates “pitfall” polygons around the screen. Every time a “fractal” points is placed in a pitfall, the user loses points. The longer the user lasts without any randomly generated fractal points landing within a polygon, the more points the user gets. The objective of the game is to place “attractor” points to build a fractal to avoid the “pitfall” polygons. If the score goes goes to 0, the player loses. The objective of the game is to survive as long as possible, by building fractals.
+## Game Description:
+This is a game to play with fractals and teach about the math behind attractor systems. The user places “attractor” points on the screen, which the program uses to create fractals. The more spread out the points are from each other, the more points the user gets. The fractals are generated when the computer randomly generates “fractal” points around the user’s “attractor” points. The program also randomly generates “pitfall” polygons around the screen. Every time a “fractal” points is placed in a pitfall, the user loses points. The longer the user lasts without any randomly generated fractal points landing within a polygon, the more points the user gets. The objective of the game is to place “attractor” points to build a fractal to avoid the “pitfall” polygons. If the score goes goes to 0, the player loses. The objective of the game is to survive as long as possible, by building fractals.
 
 ## Building fractals:
 The user clicks the screen to place “attractor” points. The user can only place new attractor points at a certain rate (ie, no more than 10 new attractor points per minute). Old “attractor” points may be randomly deleted as time passes. 
@@ -25,6 +26,7 @@ Once in a while, the rate at which fractal points are placed increases dramatica
 - Compile the program for WebAssembly, and host it on a website.
 - During the CSE 165 final class demo, form a competition to see who can get the highest score on this game. Then give out a prize for this highest score (should log player names for the leaderboard).
 - Make a 3D version of this game?
+- Maybe fractal points should change color as they get older, and are about to be removed
 
 
 
@@ -36,3 +38,10 @@ https://docs.google.com/document/d/1cf45kmz3oNQ7RqiqdlUyD_tw7w5lOnuN8sXz_nvTblA/
 - Create a CMakeLists.txt file to compile the template on different systems using CMake.
 - Add code to place the user-generated "attractor" points.
 - Randomly generate the "fractal" points.
+
+
+
+Helpful links:
+https://en.cppreference.com/w/cpp/thread/thread
+https://www.codeproject.com/Articles/598695/%2FArticles%2F598695%2FCplusplus11-threads-locks-and-condition-variables
+https://stackoverflow.com/questions/7381757/c-terminate-called-without-an-active-exception

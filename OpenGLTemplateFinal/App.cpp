@@ -1,10 +1,13 @@
 #include <iostream>
 #include "App.h"
+#include <deque>
 
 App::App(int argc, char** argv): GlutApp(argc, argv){
-    explosion = new AnimatedRect("fireball.bmp", 6, 6, 100, -0.5, 0.5, 0.5, 0.5);
     
-    fastExplosion = new AnimatedRect("fireball.bmp", 6, 6, 10, 0.5, 0.5, 0.5, 0.5);
+    explosion =     new AnimatedRect("fireball.bmp", 6, 6, 100, -0.5, 0.5, 0.5, 0.5);
+    fastExplosion = new AnimatedRect("fireball.bmp", 6, 6, 10,   0.5, 0.5, 0.5, 0.5);
+    //explosion->playLoop();
+    //fastExplosion->playLoop();
 }
 
 void App::draw() {
