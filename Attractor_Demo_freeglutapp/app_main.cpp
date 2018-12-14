@@ -8,8 +8,8 @@
 #include <chrono>	// used to convert to a chrono::duration format that threads needs to sleep for a certain amount of time
 
 // Used to control access to the fractalPoints and attractorPoints deque's
-#include <mutex>
-#include <condition_variable>
+//#include <mutex>
+//#include <condition_variable>
 
 #if defined WIN32
 #include <freeglut.h>
@@ -54,11 +54,11 @@ deque<Point> fractalPoints;
 thread fractalPointThread;
 
 // Ensures that fractal points and attractorPoints are only modified by one thread at a time
-condition_variable isAddingFractalPoints;
-condition_variable isAddingAttractorPoints;
+//condition_variable isAddingFractalPoints;
+//condition_variable isAddingAttractorPoints;
 //bool isAddingAttractorPoints;
-mutex fractalPointsModify;
-mutex attractorPointsModify;
+//mutex fractalPointsModify;
+//mutex attractorPointsModify;
 
 Polygon* polyPtr = NULL;
 
@@ -241,10 +241,10 @@ void addFractalPoint () {
 
 	while (true) {	// Keep adding points throughout the program
 		// get both locks
-		unique_lock<std::mutex> fractalLock(fractalPointsModify);
-		unique_lock<std::mutex> attractorLock(attractorPointsModify);
-		isAddingAttractorPoints.wait(fractalLock);
-		isAddingFractalPoints.wait(attractorLock);
+		//unique_lock<std::mutex> fractalLock(fractalPointsModify);
+		//unique_lock<std::mutex> attractorLock(attractorPointsModify);
+		//isAddingAttractorPoints.wait(fractalLock);
+		//isAddingFractalPoints.wait(attractorLock);
 		if (attractorPoints.size() == 0 || fractalPoints.size() == 0) {
 			
 
@@ -252,11 +252,11 @@ void addFractalPoint () {
 			cout << "Cannot add new fractal point if there are not any fractal points or attractor points\n" << endl;
 			cout << "There most be at least 1 attractor point and at least one fractalpoint to add more fractal points. There are currently " << fractalPoints.size() << " fractal points and " << attractorPoints.size() << " attractor points." << endl;
 			// release both locks
-			fractalLock.unlock();
-			attractorLock.unlock();
+			//fractalLock.unlock();
+			//attractorLock.unlock();
 			// notify waiting threads that locks were released
-			isAddingAttractorPoints.notify_one();
-			isAddingFractalPoints.notify_one();
+			//isAddingAttractorPoints.notify_one();
+			//isAddingFractalPoints.notify_one();
 			
 			this_thread::sleep_for(fractalAddPeriod);
 			continue;
@@ -272,9 +272,9 @@ void addFractalPoint () {
 		
 		// release attractor lock
 		
-		attractorLock.unlock();
+		//attractorLock.unlock();
 		// notify waiting threads that attractor lock was released
-		isAddingAttractorPoints.notify_one();
+		//isAddingAttractorPoints.notify_one();
 		
 
 		// Find midpoint between last fractal point and the chosen attractor point.
@@ -285,9 +285,9 @@ void addFractalPoint () {
 		fractalPoints.push_back(Point(midX, midY, red, green, blue));
 		
 		// unlock fractal points
-		fractalLock.unlock();
+		//fractalLock.unlock();
 		// notify waiting threads that fractal lock was released
-		isAddingFractalPoints.notify_one();
+		//isAddingFractalPoints.notify_one();
 		
 		// TODO: Make the sleep amount variable
 
@@ -342,18 +342,18 @@ void appDrawScene() {
 	glColor3f(red, green, blue);
 	
 	// Draw the attractorPoints
-	unique_lock<std::mutex> attractorLock(attractorPointsModify);	// Get attractor points lock
+	//unique_lock<std::mutex> attractorLock(attractorPointsModify);	// Get attractor points lock
 	
 	drawPoints(attractorPoints);
-	attractorLock.unlock();	// Unlock the attractor points
-	isAddingAttractorPoints.notify_one();	// Notify waiting threads
+	//attractorLock.unlock();	// Unlock the attractor points
+	//isAddingAttractorPoints.notify_one();	// Notify waiting threads
 
 	// Draw the fractalPoints
 	glColor3f (0.0, 1.0, 0.0);
-	unique_lock<std::mutex> fractalLock(fractalPointsModify);	// Get the fractal points lock
+	//unique_lock<std::mutex> fractalLock(fractalPointsModify);	// Get the fractal points lock
 	drawPoints(fractalPoints);
-	fractalLock.unlock();	// Unclock the fractal points
-	isAddingFractalPoints.notify_one();	// Notify waiting threads
+	//fractalLock.unlock();	// Unclock the fractal points
+	//isAddingFractalPoints.notify_one();	// Notify waiting threads
 	
 	//drawRectangle (-0.98, 0.98, -0.68, 0.88);
 	//drawRectangle (-0.98, 0.83, -0.68, 0.73);
@@ -461,11 +461,11 @@ void appMouseFunc(int b, int s, int x, int y) {
 	if (s == 0) {
 
 		
-		unique_lock<std::mutex> attractorLock(attractorPointsModify);
+		//unique_lock<std::mutex> attractorLock(attractorPointsModify);
 		attractorPoints.push_front(Point(mx, my, red, green, blue));
-		attractorLock.unlock();
+		//attractorLock.unlock();
 		// notify waiting threads that locks were released
-		isAddingAttractorPoints.notify_one();
+		//isAddingAttractorPoints.notify_one();
 	}
 
 	// If polygon is clicked, set it's color to a random color
