@@ -45,3 +45,10 @@ Helpful links:
 https://en.cppreference.com/w/cpp/thread/thread
 https://www.codeproject.com/Articles/598695/%2FArticles%2F598695%2FCplusplus11-threads-locks-and-condition-variables
 https://stackoverflow.com/questions/7381757/c-terminate-called-without-an-active-exception
+https://stackoverflow.com/questions/3568503/extra-brace-brackets-in-c-code
+https://stackoverflow.com/questions/35827459/assigning-a-new-task-to-a-thread-after-the-thread-completes-in-c
+https://stackoverflow.com/questions/10974829/waiting-thread-until-a-condition-has-been-occurred
+http://www.cplusplus.com/reference/atomic/atomic/
+http://www.cplusplus.com/forum/beginner/196573/
+https://en.cppreference.com/w/cpp/chrono/time_point
+

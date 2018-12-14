@@ -1,0 +1,14 @@
+
+#############
+# GitIgnore #
+#############
+
+# Ignore executables
+*.exe
+
+# Ignore Files without extension (these are usually executables compiled in Linux)
+#*
+
+# Ignore files generated during c++ build process
+*.o
+*.d

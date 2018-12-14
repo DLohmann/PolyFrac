@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "thread": "cpp",
+        "deque": "cpp",
+        "initializer_list": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "xhash": "cpp",
+        "xiosbase": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "mutex": "cpp"
+    }
+}
