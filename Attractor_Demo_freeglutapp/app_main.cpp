@@ -118,7 +118,7 @@ void drawRectangle (float x1, float y1, float x2, float y2) {
 }
 
 
-void print (float x, float y, int z, char *text_string){
+void drawText (float x, float y, int z, char *text_string){
 	// set the position of the text in the window using the x and y coordinates
 	glRasterPos2f(x,y);
 	// get the length of the string to display
@@ -130,7 +130,7 @@ void print (float x, float y, int z, char *text_string){
 	}
 }
 
-
+/*
 void drawText (float xPos, float yPos, char * textStr) {
 	void* font = GLUT_BITMAP_TIMES_ROMAN_10;
 	glRasterPos2f (xPos, yPos);
@@ -143,6 +143,7 @@ void drawText (float xPos, float yPos, char * textStr) {
 		return;
 	}
 }
+*/
 
 //-------------------------------------------------------
 // A function to draw a letter identified by "char shape" at coordinates (xPos, yPos)
@@ -327,6 +328,12 @@ void addFractalPoint () {
 	}	
 }
 
+// Displays point counter at top of window
+void indicateNumberOfPoints () {
+	char buffer [30];
+	int len = sprintf (buffer, "Attractors: %d, Fractal points: %d", attractorPoints.size(), fractalPoints.size());
+	drawText(0.0f, 0.75, 0, buffer);
+}
 
 //-------------------------------------------------------
 // A function to draw the scene
@@ -379,10 +386,12 @@ void appDrawScene() {
 	//glEnd();
 
 	// TODO: Draw text indicating the number of points placed on the top right corner
-	char hiStr [] = "Hi!";
+	//char hiStr [] = "Hi!";
 	//drawText (-0.75, 0.55, hiStr);
-	print(0.0, 0.0, 0, hiStr);
+
+	//print(0.75, 0.75, 0, hiStr);
 	
+	indicateNumberOfPoints ();
 
 	// We have been drawing everything to the back buffer
 	// Swap the buffers to see the result of what we drew
