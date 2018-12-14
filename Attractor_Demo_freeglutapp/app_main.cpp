@@ -1,5 +1,6 @@
 #include <iostream>
-#include <deque>
+#include <deque> used for fractalPoints and attractorPoints
+//#include <map>
 #include <math.h> // has square root for drawing curves
 #include <stdlib.h> // has rand() and RAND_MAX
 #include "Polygon.h"
@@ -19,8 +20,10 @@
 #include <GL/freeglut.h>
 #endif
 
+// Debugging flags for print statments, to help in debugging
 #define debug_graphics
 #define debug_addFractalPoint
+#define debug_point_list_structures
 
 using namespace std;
 
@@ -51,6 +54,9 @@ struct Point {
 // A "Double Ended QUEue" to store attractorPoints 
 deque<Point> attractorPoints;
 deque<Point> fractalPoints;
+//map <int, Point> attractorPoints;
+//map <int, Point> fractalPoints;
+
 thread fractalPointThread;
 
 // Ensures that fractal points and attractorPoints are only modified by one thread at a time
@@ -129,7 +135,17 @@ void drawRectangle (float x1, float y1, float x2, float y2) {
 }
 
 
-void drawText (float x, float y, int z, char *text_string){
+void drawText (float x, float y, int size, char *text_string){
+	void* font = GLUT_BITMAP_TIMES_ROMAN_10;
+	// Choose font size
+	switch (size) {
+		case 0:
+			font = GLUT_BITMAP_TIMES_ROMAN_24;
+			break;
+		default:
+			break;
+	}
+
 	// set the position of the text in the window using the x and y coordinates
 	glRasterPos2f(x,y);
 	// get the length of the string to display
@@ -137,7 +153,7 @@ void drawText (float x, float y, int z, char *text_string){
 	int len = strlen(text_string);
 	//loop to display character by character 
 	for (int i = 0; i< len; i++){
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text_string [i]);
+		glutBitmapCharacter(font, text_string [i]);
 	}
 }
 
@@ -276,7 +292,8 @@ void addFractalPoint () {
 
 			//perror ("Cannot  add new attractor point if the first one has not been placed\n");
 			cout << "Cannot add new fractal point if there are not any fractal points or attractor points\n" << endl;
-			cout << "There most be at least 1 attractor point and at least one fractalpoint to add more fractal points. There are currently " << fractalPoints.size() << " fractal points and " << attractorPoints.size() << " attractor points." << endl;
+			cout << "There most be at least 1 attractor point and at least one fractalpoint to add more fractal points. There are currently "
+			 << fractalPoints.size() << " fractal points and " << attractorPoints.size() << " attractor points." << endl;
 			// release both locks
 			//fractalLock.unlock();
 			//attractorLock.unlock();
@@ -292,7 +309,8 @@ void addFractalPoint () {
 		// Choose an attractor point to get the average of
 		int chosenAttractor = rand() % attractorPoints.size();
 
-		// TODO: This section of code should not be interrupted, or it can cause a segmentation fault of the attractor points are cleared in this section. Because Point& attractor would point to a deleted point
+		// TODO: This section of code should not be interrupted, or it can cause a segmentation fault of the attractor points are cleared 
+		// in this section. Because Point& attractor would point to a deleted point
 		Point attractor = attractorPoints[chosenAttractor];
 		Point lastFractalPoint = fractalPoints.back();
 		
@@ -330,7 +348,8 @@ void addFractalPoint () {
 		long currentTime = chrono::system_clock::now().time_since_epoch().count();
 		//int currentTime = chrono::system_clock::duration
 		#ifdef debug_addFractalPoint
-			cout << "Fractal thread: Added fractal point #" << fractalPoints.size() << " at time " << currentTime - lastFractalAdd << " ms attracted to attractor #" << chosenAttractor << endl;
+			cout << "Fractal thread: Added fractal point #" << fractalPoints.size() << " at time " << currentTime - lastFractalAdd 
+			<< " ms attracted to attractor #" << chosenAttractor << endl;
 		#endif
 		lastFractalAdd = currentTime;
 		// Make this thread sleep until it is time to place the next point. The point placement rate is defined by variable __ 
@@ -350,7 +369,7 @@ void indicateNumberOfPoints () {
 void printCoordinates (float mx, float my) {
 	char buffer [30];
 	int len = sprintf(buffer, "(%f, %f)", mx, my);
-	drawText (mx, my, 0, buffer);
+	drawText (mx, my, 1, buffer);
 }
 
 //-------------------------------------------------------
@@ -382,7 +401,9 @@ void appDrawScene() {
 	
 	// Draw the attractorPoints
 	//unique_lock<std::mutex> attractorLock(attractorPointsModify);	// Get attractor points lock
-	
+	#ifdef debug_point_list_structures
+		cout << "Calling drawPoints(attractorPoints); which has size " << attractorPoints.size() << endl;
+	#endif
 	drawPoints(attractorPoints);
 	//attractorLock.unlock();	// Unlock the attractor points
 	//isAddingAttractorPoints.notify_one();	// Notify waiting threads
@@ -390,6 +411,9 @@ void appDrawScene() {
 	// Draw the fractalPoints
 	glColor3f (0.0, 1.0, 0.0);
 	//unique_lock<std::mutex> fractalLock(fractalPointsModify);	// Get the fractal points lock
+	#ifdef debug_point_list_structures
+		cout << "Calling drawPoints(fractalPoints); which has size " << fractalPoints.size() << endl;
+	#endif
 	drawPoints(fractalPoints);
 	//fractalLock.unlock();	// Unclock the fractal points
 	//isAddingFractalPoints.notify_one();	// Notify waiting threads
