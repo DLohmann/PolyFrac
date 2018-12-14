@@ -6,7 +6,7 @@
 #include <stdio.h> // has perror
 #include <thread>	// has threads
 #include <chrono>	// used to convert to a chrono::duration format that threads needs to sleep for a certain amount of time
-
+#include <string.h>	// Has strlen
 // Used to control access to the fractalPoints and attractorPoints deque's
 //#include <mutex>
 //#include <condition_variable>
@@ -19,7 +19,7 @@
 #include <GL/freeglut.h>
 #endif
 
-//#define debug_graphics
+#define debug_graphics
 #define debug_addFractalPoint
 
 using namespace std;
@@ -116,6 +116,20 @@ void drawRectangle (float x1, float y1, float x2, float y2) {
 	glVertex2f (xRight, yLower);
 	glEnd ();
 }
+
+
+void print (float x, float y, int z, char *text_string){
+	// set the position of the text in the window using the x and y coordinates
+	glRasterPos2f(x,y);
+	// get the length of the string to display
+	//int len = text_string.Length();
+	int len = strlen(text_string);
+	//loop to display character by character 
+	for (int i = 0; i< len; i++){
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text_string [i]);
+	}
+}
+
 
 void drawText (float xPos, float yPos, char * textStr) {
 	void* font = GLUT_BITMAP_TIMES_ROMAN_10;
@@ -364,8 +378,10 @@ void appDrawScene() {
 	//glVertex2f(-0.8, -0.8);
 	//glEnd();
 
-
-
+	// TODO: Draw text indicating the number of points placed on the top right corner
+	char hiStr [] = "Hi!";
+	//drawText (-0.75, 0.55, hiStr);
+	print(0.0, 0.0, 0, hiStr);
 	
 
 	// We have been drawing everything to the back buffer
