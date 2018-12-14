@@ -27,12 +27,20 @@
 struct vertex {
 	float x;
 	float y;
+	vertex (float x, float y) : x(x), y(y) {
+
+	}
+	vertex() : x(0), y(0) {
+		
+	}
 };
 
 class Polygon {
 	public:
 		// Constructors
-		// Polygon ();
+		Polygon ();	// Generates a square
+		// Polygon (int seed);	// Generates a randomized polygon using the seed
+		// Polygon (float averageSize); // Generates a randomized polygon with vertices that are averageSize away from each other. (the (n+1)th point is no more than 2*(averageSize) away from the nth point)  for all points
 		Polygon (std::list <vertex> );
 		
 		// Destructor
@@ -65,9 +73,14 @@ class Polygon {
 		std::list<vertex> points;
 };
 
-// Polygon::Polygon () {
-	
-// }
+// Generates a square
+Polygon::Polygon () {
+	this->points.push_back (vertex( 0.25f,  0.25f));
+	this->points.push_back (vertex(-0.25f,  0.25f));
+	this->points.push_back (vertex( 0.25f, -0.25f));
+	this->points.push_back (vertex(-0.25f, -0.25f));
+	poly_Color3f (0.5f, 0.5f, 0.5f);
+}
 
 Polygon::Polygon (std::list <vertex> points) {
 	this->points = std::list <vertex> (points);

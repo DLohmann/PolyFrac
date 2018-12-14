@@ -68,6 +68,8 @@ float red = 0.0, green = 0.0, blue = 0.0;
 // Store the width and height of the window
 int width = 640, height = 640;
 
+void printCoordinates (float, float);	// Print the coordinates of a certain point
+
 float randFloat (float rand_upper_bound, float rand_lower_bound) {
 	// remember that shifting an integer left << or right >> is equivalent to multiplying it or dividing it by 2
 	//int normalized_rand_int = (rand() - (RAND_MAX>>1))<<1; // when rand() is 0, normalized_rand_int is about -RAND_MAX. When rand() is RAND_MAX, normalized_rand_int is also about RAND_MAX
@@ -83,6 +85,10 @@ void drawPoints (deque<Point>& pointsList) {
 	#ifdef debug_graphics
 		cout << "\tDrawing a points list" << endl;
 	#endif
+	if (pointsList.size() == 0) {
+		return;
+		//perror ("void drawPoints (deque<Point>& pointsList) error: Cannot draw points if a list of size 0\n");
+	}
 	for (int i = 0; i < pointsList.size(); i++) {
 
 		// Set the vertex color to be whatever we stored in the point
@@ -98,6 +104,11 @@ void drawPoints (deque<Point>& pointsList) {
 			cout << "\t\tDrew point " << i << endl;
 		#endif
 	}
+
+	// Draw coordinates of last point:
+	Point& p = pointsList.back();
+	printCoordinates(p.x, p.y);
+
 	#ifdef debug_graphics
 		cout << "\tDrew list" << endl;
 	#endif
@@ -233,8 +244,8 @@ void drawLetter(char letter, float xPos, float yPos, float size) {
 chrono::duration <int, milli> fractalAddPeriod = chrono::milliseconds(1);
 
 void initFractalPoints();
-
-void setFractalPointAddPeriod (int milliseconds_amount) {
+// TODO: Check lose conditions. If a player loses, then show the explosion animation
+void setFractalPointAddPeriod (int milliseconds_amount) {	// TODO: Set fractal point period to decrease as game goes on, to make it harder
 	if (milliseconds_amount < 0) {
 		cout << "setFractalPointAddPeriod error: Must enter a positive value for the number of milliseconds to add a fractal point, but not: " << milliseconds_amount << endl;
 		return;
@@ -304,7 +315,7 @@ void addFractalPoint () {
 		// notify waiting threads that fractal lock was released
 		//isAddingFractalPoints.notify_one();
 		
-		// TODO: Make the sleep amount variable
+		// TODO: After adding a new point, check if it is inside any of the generated polygons. If so, then decrease the score. Or else, increase the score.
 
 		// Helpful print statement
 		/*
@@ -332,7 +343,14 @@ void addFractalPoint () {
 void indicateNumberOfPoints () {
 	char buffer [30];
 	int len = sprintf (buffer, "Attractors: %d, Fractal points: %d", attractorPoints.size(), fractalPoints.size());
-	drawText(0.0f, 0.75, 0, buffer);
+	drawText(-0.15f, 0.75, 0, buffer);
+}
+
+// Prints the coordinates of a point, at that point
+void printCoordinates (float mx, float my) {
+	char buffer [30];
+	int len = sprintf(buffer, "(%f, %f)", mx, my);
+	drawText (mx, my, 0, buffer);
 }
 
 //-------------------------------------------------------
@@ -378,7 +396,7 @@ void appDrawScene() {
 	
 	//drawRectangle (-0.98, 0.98, -0.68, 0.88);
 	//drawRectangle (-0.98, 0.83, -0.68, 0.73);
-	//polyPtr->draw();
+	polyPtr->draw();
 	
 	// Draw a point at the bottom-right
 	//glBegin(GL_POINTS);
@@ -487,10 +505,13 @@ void appMouseFunc(int b, int s, int x, int y) {
 
 		
 		//unique_lock<std::mutex> attractorLock(attractorPointsModify);
-		attractorPoints.push_front(Point(mx, my, red, green, blue));
+		attractorPoints.push_back(Point(mx, my, red, green, blue));
 		//attractorLock.unlock();
 		// notify waiting threads that locks were released
 		//isAddingAttractorPoints.notify_one();
+
+		// Show mouse coordinates at this position
+		//printCoordinates (mx, my);
 	}
 
 	// If polygon is clicked, set it's color to a random color
