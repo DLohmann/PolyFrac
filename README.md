@@ -39,6 +39,11 @@ https://docs.google.com/document/d/1cf45kmz3oNQ7RqiqdlUyD_tw7w5lOnuN8sXz_nvTblA/
 - Add code to place the user-generated "attractor" points.
 - Randomly generate the "fractal" points.
 
+# Controls:
+- [Click] : Place an attractor point.
+- [d] : Begin building fractals.
+- [r], [g], or [b] : Make the new points red, green, or blue.
+- [Space] : Clear all points.
 
 
 Helpful links:
