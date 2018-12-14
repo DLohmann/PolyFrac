@@ -11,6 +11,8 @@
 
 #include <list>
 #include <limits> // Has max float limits:
+#include <cmath> // has abs() absolute value for calculating area of a polygon
+
 //std::numeric_limits<float>::max();
 //std::numeric_limits<float>::min();
 //std::numeric_limits<float>::infinity();
@@ -47,7 +49,7 @@ class Polygon {
 		bool contains (vertex);
 		//bool contains (vertex v);
 		size_t size(); // Returns the number of points that the polygon is made of.
-		//float area (); // Returns the area of the polygon. Uses a clever algorithm: _____________________TODO___
+		float area (); // Returns the area of the polygon. Uses a clever algorithm: _____________________TODO___
 		
 		// Member variables
 		
@@ -234,7 +236,22 @@ bool Polygon::contains (vertex p) {
     vertex extreme = {std::numeric_limits<float>::max(), p.y}; 
   
     // Count intersections of the above line with sides of polygon 
-    int count = 0, i = 0; 
+    int count = 0;
+	std::list<vertex>::iterator it = points.end();
+	std::list<vertex>::iterator next = points.begin();
+	do {
+		
+		if (doIntersect(*it, *next, p, extreme)) {
+			if (orientation(*it, p, *next) == 0) { 
+               return onSegment(*it, p, *next); 
+			}
+			count++;
+		}
+		it = next;
+		next++;
+	} while (it != points.end());
+	/*
+	int count = 0, i = 0; 
     do
     { 
         int next = (i+1)%this->size(); 
@@ -253,9 +270,35 @@ bool Polygon::contains (vertex p) {
         } 
         i = next; 
     } while (i != 0); 
-  
+	*/
+
     // Return true if count is odd, false otherwise 
     return count&1;  // Same as (count%2 == 1) 
 } 
+
+// Copied from https://www.geeksforgeeks.org/area-of-a-polygon-with-given-n-ordered-vertices/
+float Polygon::area () {
+ 
+    // Initialze area 
+    float area = 0.0; 
+	
+    // Calculate value of shoelace formula 
+	std::list<vertex>::iterator it   = points.begin();
+	std::list<vertex>::iterator last = points.end();
+	do {
+		area += (last->x + it->x) * (last->y - it->y);
+		last = it;
+	} while (it++ != points.end());
+    /*
+	int j = this->size - 1; 
+    for (int i = 0; i < this->size; i++) 
+    { 
+        area += (X[j] + X[i]) * (Y[j] - Y[i]); 
+        j = i;  // j is previous vertex to i 
+    } 
+	*/
+    // Return absolute value 
+    return std::abs(area / 2.0); 
+}
 
 #endif
