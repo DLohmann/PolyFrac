@@ -56,8 +56,9 @@ deque<Point> attractorPoints;
 deque<Point> fractalPoints;
 //map <int, Point> attractorPoints;
 //map <int, Point> fractalPoints;
-
+list<Polygon> allPolygons;	// Holds all polygons created so far
 thread fractalPointThread;
+int score = 5000; // decreases 1 for every fractal point inside a polygon
 
 // Ensures that fractal points and attractorPoints are only modified by one thread at a time
 //condition_variable isAddingFractalPoints;
@@ -76,15 +77,7 @@ int width = 640, height = 640;
 
 void printCoordinates (float, float);	// Print the coordinates of a certain point
 
-float randFloat (float rand_upper_bound, float rand_lower_bound) {
-	// remember that shifting an integer left << or right >> is equivalent to multiplying it or dividing it by 2
-	//int normalized_rand_int = (rand() - (RAND_MAX>>1))<<1; // when rand() is 0, normalized_rand_int is about -RAND_MAX. When rand() is RAND_MAX, normalized_rand_int is also about RAND_MAX
-	//float normalized_rand_float = ((float)(normalized_rand_int))/((float)RAND_MAX); // a normalized random float between -1 and 1
-	
-	float rand_float = ((float)rand())/((float)RAND_MAX); // a positive random float between 0 and 1
-	
-	return (rand_upper_bound - rand_lower_bound) * rand_float + rand_lower_bound;
-}
+
 
 void drawPoints (deque<Point>& pointsList) {
 	// Draw all the pointsList stored in the double-ended queue
@@ -257,7 +250,9 @@ void drawLetter(char letter, float xPos, float yPos, float size) {
 }
 
 //chrono::duration<int, milli> fractalAddPeriod = chrono::duration<int, milli>(10);
-chrono::duration <int, milli> fractalAddPeriod = chrono::milliseconds(1);
+chrono::duration <int, milli> PolygonAddPeriod = chrono::milliseconds(1000);	// Should add a polygon on average every 5 sec (5000 ms), based on randomness
+chrono::duration <int, milli> fractalAddPeriod = chrono::milliseconds(10);	// Should definately add a fractal point every millisecond
+int polygon_add_probability_ratio = chrono::milliseconds(PolygonAddPeriod) / chrono::milliseconds(fractalAddPeriod);
 
 void initFractalPoints();
 // TODO: Check lose conditions. If a player loses, then show the explosion animation
@@ -333,7 +328,28 @@ void addFractalPoint () {
 		// notify waiting threads that fractal lock was released
 		//isAddingFractalPoints.notify_one();
 		
-		// TODO: After adding a new point, check if it is inside any of the generated polygons. If so, then decrease the score. Or else, increase the score.
+		// After adding a new point, check if it is inside any of the generated polygons. If so, then decrease the score. Or else, increase the score.
+		for (list<Polygon>::iterator it = allPolygons.begin(); it != allPolygons.end(); it++) {
+			if (it->contains(midX, midY)) {
+				score--;
+			}
+		}
+		
+		// Check if score is 0
+		if (score <= 0) {
+			score = 0;
+			char loseMessage [] = "You Lose!";
+			glColor3f(1.0f, 0.0f, 0.0f);	// Ensure text is red
+			drawText (-0.50f, 0.0f, 0, loseMessage);
+			this_thread::sleep_for(chrono::minutes(3));	// wait for 3 minutes before closing
+			exit(0);	// End program
+		}
+
+		// With a certain probability generate a new polygon:
+		// Should generate a polygon on average of once every 5 seconds (5000 milliseconds)
+		if (rand() % polygon_add_probability_ratio == 0) {
+			allPolygons.push_back(Polygon(0.35f));	// Can adjust how far adjacent points in polygon are from each other, on average
+		}
 
 		// Helpful print statement
 		/*
@@ -360,9 +376,10 @@ void addFractalPoint () {
 
 // Displays point counter at top of window
 void indicateNumberOfPoints () {
-	char buffer [30];
-	int len = sprintf (buffer, "Attractors: %d, Fractal points: %d", attractorPoints.size(), fractalPoints.size());
-	drawText(-0.15f, 0.75, 0, buffer);
+	char buffer [100];
+	//int len = sprintf (buffer, "Attractors: %d, Fractal points: %d", attractorPoints.size(), fractalPoints.size());
+	int len = sprintf (buffer, "Attractors: %d, Polygons: %d, Score: %d, Fractal points: %d", attractorPoints.size(), allPolygons.size(), score, fractalPoints.size());
+	drawText(-0.25f, 0.75, 1, buffer);
 }
 
 // Prints the coordinates of a point, at that point
@@ -418,9 +435,15 @@ void appDrawScene() {
 	//fractalLock.unlock();	// Unclock the fractal points
 	//isAddingFractalPoints.notify_one();	// Notify waiting threads
 	
+	// Draw all polygons:
+	for (list<Polygon>::iterator it = allPolygons.begin(); it != allPolygons.end(); it++) {
+		it->draw();
+	}
+
 	//drawRectangle (-0.98, 0.98, -0.68, 0.88);
 	//drawRectangle (-0.98, 0.83, -0.68, 0.73);
-	polyPtr->draw();
+	//polyPtr->draw();
+
 	
 	// Draw a point at the bottom-right
 	//glBegin(GL_POINTS);
@@ -539,9 +562,9 @@ void appMouseFunc(int b, int s, int x, int y) {
 	}
 
 	// If polygon is clicked, set it's color to a random color
-	if (polyPtr->contains(mx, my)) {
-		polyPtr->poly_Color3f (randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f));
-	}
+	//if (polyPtr->contains(mx, my)) {
+	//	polyPtr->poly_Color3f (randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f));
+	//}
 	
 	// Redraw the scene by calling appDrawScene above
 	// so that the point we added above will get painted
@@ -566,9 +589,9 @@ void appMotionFunc(int x, int y) {
 	//attractorPoints.push_front(Point(mx, my, red, green, blue));
 
 	// If polygon is clicked, set it's color to a random color
-	if (polyPtr->contains(mx, my)) {
-		polyPtr->poly_Color3f (randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f));
-	}
+	//if (polyPtr->contains(mx, my)) {
+	//	polyPtr->poly_Color3f (randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f));
+	//}
 	
 	// Again, we redraw the scene
 	glutPostRedisplay();
@@ -654,6 +677,7 @@ void appKeyboardFunc(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
+/*
 void initPolygons () {
 	list <vertex> vList;
 	vertex upper;
@@ -673,10 +697,10 @@ void initPolygons () {
 	
 	
 	//Polygon poly (vList);
-	polyPtr = new Polygon (vList);
+	//polyPtr = new Polygon (vList);
 	
 }
-
+*/
 
 void initFractalPoints() {
 	// Acquire lock to add to fractalPoints
@@ -710,7 +734,7 @@ int main(int argc, char** argv) {
 	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_LINE_SMOOTH);
 
-	initPolygons();
+	//initPolygons();
 	//initFractalPoints();
 
 	appDrawScene(); // Set initial screen

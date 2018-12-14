@@ -21,8 +21,17 @@
 
 //template<class T>
 
-//static std::list<Polygon&> allPolygons; // global variable to keep track of all polygons created so far (constructors should add to this list)
-// TODO: Create drawAllPolygons variable that draws all polygons that have been created
+
+
+float randFloat (float rand_upper_bound, float rand_lower_bound) {
+	// remember that shifting an integer left << or right >> is equivalent to multiplying it or dividing it by 2
+	//int normalized_rand_int = (rand() - (RAND_MAX>>1))<<1; // when rand() is 0, normalized_rand_int is about -RAND_MAX. When rand() is RAND_MAX, normalized_rand_int is also about RAND_MAX
+	//float normalized_rand_float = ((float)(normalized_rand_int))/((float)RAND_MAX); // a normalized random float between -1 and 1
+	
+	float rand_float = ((float)rand())/((float)RAND_MAX); // a positive random float between 0 and 1
+	
+	return (rand_upper_bound - rand_lower_bound) * rand_float + rand_lower_bound;
+}
 
 struct vertex {
 	float x;
@@ -40,7 +49,7 @@ class Polygon {
 		// Constructors
 		Polygon ();	// Generates a square
 		// Polygon (int seed);	// Generates a randomized polygon using the seed
-		// Polygon (float averageSize); // Generates a randomized polygon with vertices that are averageSize away from each other. (the (n+1)th point is no more than 2*(averageSize) away from the nth point)  for all points
+		Polygon (float); // Generates a randomized polygon with vertices that are averageSize away from each other (float averageSize). (the (n+1)th point is no more than 2*(averageSize) away from the nth point)  for all points
 		Polygon (std::list <vertex> );
 		
 		// Destructor
@@ -65,12 +74,17 @@ class Polygon {
 		float poly_red;
 		float poly_green;
 		float poly_blue;
-		
+		//static list<Polygon&> polygonList;
+		//static std::list<Polygon*> allPolygons;
+		 // global variable to keep track of all polygons created so far (constructors should add to this list)
+		// TODO: Create drawAllPolygons variable that draws all polygons that have been created
 	private:
 		
 		
 		
 		std::list<vertex> points;
+
+		
 };
 
 // Generates a square
@@ -80,12 +94,38 @@ Polygon::Polygon () {
 	this->points.push_back (vertex( 0.25f, -0.25f));
 	this->points.push_back (vertex(-0.25f, -0.25f));
 	poly_Color3f (0.5f, 0.5f, 0.5f);
+	//Polygon::allPolygons.push_back(this);
 }
 
 Polygon::Polygon (std::list <vertex> points) {
 	this->points = std::list <vertex> (points);
-	poly_Color3f (0.5f, 0.5f, 0.5f);
-	//allPolygons.push_front(this);
+	//poly_Color3f (0.5f, 0.5f, 0.5f);
+	poly_Color3f (randFloat(1.0f, 0.0f), randFloat(1.0f, 0.0f), randFloat(1.0f, 0.0f));
+	//Polygon::allPolygons.push_back(this);
+}
+
+// Generates random polygons with vertices that are on average averageSize away from adjacent points
+Polygon::Polygon (float averageSize) {
+	int numSides = rand()%3 + 3;	// There should be 3-5 sides per polygon
+
+	//float maxBound = 2*averageSize;	// max 
+	std::list <vertex> poly_points;
+	
+	// The initial points can be anywhere on the canvas
+	float x = randFloat(1.0, -1.0f);
+	float y = randFloat(1.0, -1.0f);
+
+	for (int i = 0; i < numSides; i++) {
+		// Move the vertex slightly to get the next vertex
+		x += randFloat(averageSize, -1*averageSize);
+		y += randFloat(averageSize, -1*averageSize);
+
+		poly_points.push_back(vertex(x, y));	// Add points to vertex list
+	}
+
+	//Polygon::Polygon(poly_points);	// Call other constructor
+	this->points = std::list <vertex> (poly_points);
+	poly_Color3f (randFloat(1.0f, 0.0f), randFloat(1.0f, 0.0f), randFloat(1.0f, 0.0f));
 }
 
 Polygon::~Polygon () {
