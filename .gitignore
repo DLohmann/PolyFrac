@@ -12,3 +12,7 @@
 # Ignore files generated during c++ build process
 *.o
 *.d
+
+# Ignore .mp4 and .zip video files (used to film conditions that caused an error, to reference them later)
+*.mp4
+*.zip

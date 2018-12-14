@@ -56,4 +56,5 @@ https://stackoverflow.com/questions/10974829/waiting-thread-until-a-condition-ha
 http://www.cplusplus.com/reference/atomic/atomic/
 http://www.cplusplus.com/forum/beginner/196573/
 https://en.cppreference.com/w/cpp/chrono/time_point
-
+https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/
+https://www.geeksforgeeks.org/area-of-a-polygon-with-given-n-ordered-vertices/
