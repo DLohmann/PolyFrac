@@ -1,6 +1,6 @@
 #include <iostream>
-//#include <deque> used for fractalPoints and attractorPoints
-#include <map>
+#include <deque> used for fractalPoints and attractorPoints
+//#include <map>
 #include <math.h> // has square root for drawing curves
 #include <stdlib.h> // has rand() and RAND_MAX
 #include "Polygon.h"
@@ -52,10 +52,10 @@ struct Point {
 };
 
 // A "Double Ended QUEue" to store attractorPoints 
-//deque<Point> attractorPoints;
-//deque<Point> fractalPoints;
-map <int, Point> attractorPoints;
-map <int, Point> fractalPoints;
+deque<Point> attractorPoints;
+deque<Point> fractalPoints;
+//map <int, Point> attractorPoints;
+//map <int, Point> fractalPoints;
 
 thread fractalPointThread;
 
@@ -86,8 +86,7 @@ float randFloat (float rand_upper_bound, float rand_lower_bound) {
 	return (rand_upper_bound - rand_lower_bound) * rand_float + rand_lower_bound;
 }
 
-
-void drawPoints (map<int, Point>& pointsList) {
+void drawPoints (deque<Point>& pointsList) {
 	// Draw all the pointsList stored in the double-ended queue
 	#ifdef debug_graphics
 		cout << "\tDrawing a points list" << endl;
@@ -96,18 +95,15 @@ void drawPoints (map<int, Point>& pointsList) {
 		return;
 		//perror ("void drawPoints (deque<Point>& pointsList) error: Cannot draw points if a list of size 0\n");
 	}
-	//for (int i = 0; i < pointsList.size(); i++) {
-	#ifdef debug_graphics
-		int i = 0;
-	#endif
-	for (map<int, Point>::iterator it = pointsList.begin(); it != pointsList.end(); it++) {
+	for (int i = 0; i < pointsList.size(); i++) {
+
 		// Set the vertex color to be whatever we stored in the point
-		glColor3f(it->second.r, it->second.g, it->second.b);
+		glColor3f(pointsList[i].r, pointsList[i].g, pointsList[i].b);
 
 		glBegin(GL_POINTS);
 
 		// Draw the vertex in the right position
-		glVertex2f(it->second.x, it->second.y);
+		glVertex2f(pointsList[i].x, pointsList[i].y);
 
 		glEnd();
 		#ifdef debug_graphics
@@ -116,7 +112,7 @@ void drawPoints (map<int, Point>& pointsList) {
 	}
 
 	// Draw coordinates of last point:
-	const Point& p = prev(pointsList.end())->second;
+	Point& p = pointsList.back();
 	printCoordinates(p.x, p.y);
 
 	#ifdef debug_graphics
@@ -315,8 +311,8 @@ void addFractalPoint () {
 
 		// TODO: This section of code should not be interrupted, or it can cause a segmentation fault of the attractor points are cleared 
 		// in this section. Because Point& attractor would point to a deleted point
-		const Point& attractor = attractorPoints.find(chosenAttractor)->second;
-		const Point& lastFractalPoint = prev(fractalPoints.end())->second;
+		Point attractor = attractorPoints[chosenAttractor];
+		Point lastFractalPoint = fractalPoints.back();
 		
 		// release attractor lock
 		
@@ -330,7 +326,7 @@ void addFractalPoint () {
 		float midY = (attractor.y + lastFractalPoint.y) / 2;
 
 		// Create the new fractal point at the midpoint, and add it to the fractal points list
-		fractalPoints.insert((int)fractalPoints.size(), Point(midX, midY, red, green, blue));
+		fractalPoints.push_back(Point(midX, midY, red, green, blue));
 		
 		// unlock fractal points
 		//fractalLock.unlock();
@@ -533,7 +529,7 @@ void appMouseFunc(int b, int s, int x, int y) {
 
 		
 		//unique_lock<std::mutex> attractorLock(attractorPointsModify);
-		attractorPoints.insert((int)attractorPoints.size(), Point(mx, my, red, green, blue));
+		attractorPoints.push_back(Point(mx, my, red, green, blue));
 		//attractorLock.unlock();
 		// notify waiting threads that locks were released
 		//isAddingAttractorPoints.notify_one();
@@ -686,7 +682,7 @@ void initFractalPoints() {
 	// Acquire lock to add to fractalPoints
 
 	// Randomly choose coordinates of 1st point to place
-	fractalPoints.insert((int)fractalPoints.size(), Point(randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f), 0.0f, 1.0f, 0.0f));
+	fractalPoints.push_back(Point(randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f), 0.0f, 1.0f, 0.0f));
 
 	// Create a thread that adds new random points asynchronously, for the duration of the program. This thread should call addFractalPoint()
 	cout << "Creating a thread to add fractal points" << endl;
