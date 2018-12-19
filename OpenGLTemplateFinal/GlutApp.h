@@ -9,6 +9,8 @@
 #include <GL/freeglut.h>
 #endif
 
+
+
 class GlutApp {
     int width;
     int height;

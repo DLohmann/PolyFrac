@@ -1,6 +1,417 @@
-#include <iostream>
+//#include <iostream>
 #include "App.h"
-#include <deque>
+//#include <deque>
+
+#include <iostream>
+#include <deque> used for fractalPoints and attractorPoints
+//#include <map>
+#include <math.h> // has square root for drawing curves
+#include <stdlib.h> // has rand() and RAND_MAX
+#include "Polygon.h"
+#include <stdio.h> // has perror
+#include <thread>	// has threads
+#include <chrono>	// used to convert to a chrono::duration format that threads needs to sleep for a certain amount of time
+#include <string.h>	// Has strlen
+// Used to control access to the fractalPoints and attractorPoints deque's
+//#include <mutex>
+//#include <condition_variable>
+
+
+
+
+// Debugging flags for print statments, to help in debugging
+#define debug_graphics
+#define debug_addFractalPoint
+#define debug_point_list_structures
+
+using namespace std;
+
+// Some global variables to maintain state
+
+
+// A point data structure
+struct Point {
+	// The coordinates of the point
+	float x;
+	float y;
+
+	// The color of the point
+	float r;
+	float g;
+	float b;
+
+	// A constructor for point
+	Point(float x, float y, float r, float g, float b) {
+		this->x = x;
+		this->y = y;
+		this->r = r;
+		this->g = g;
+		this->b = b;
+	}
+};
+
+// A "Double Ended QUEue" to store attractorPoints 
+deque<Point> attractorPoints;
+deque<Point> fractalPoints;
+//map <int, Point> attractorPoints;
+//map <int, Point> fractalPoints;
+list<Polygon> allPolygons;	// Holds all polygons created so far
+thread fractalPointThread;
+int score = 5000; // decreases 1 for every fractal point inside a polygon
+
+// Ensures that fractal points and attractorPoints are only modified by one thread at a time
+//condition_variable isAddingFractalPoints;
+//condition_variable isAddingAttractorPoints;
+//bool isAddingAttractorPoints;
+//mutex fractalPointsModify;
+//mutex attractorPointsModify;
+
+Polygon* polyPtr = NULL;
+
+// Variables to store current color, initialize to black
+float red = 0.0, green = 0.0, blue = 0.0;
+
+// Store the width and height of the window
+int width = 640, height = 640;
+
+void printCoordinates (float, float);	// Print the coordinates of a certain point
+
+
+
+void drawPoints (deque<Point>& pointsList) {
+	// Draw all the pointsList stored in the double-ended queue
+	#ifdef debug_graphics
+		cout << "\tDrawing a points list" << endl;
+	#endif
+	if (pointsList.size() == 0) {
+		return;
+		//perror ("void drawPoints (deque<Point>& pointsList) error: Cannot draw points if a list of size 0\n");
+	}
+	for (int i = 0; i < pointsList.size(); i++) {
+
+		// Set the vertex color to be whatever we stored in the point
+		glColor3f(pointsList[i].r, pointsList[i].g, pointsList[i].b);
+
+		glBegin(GL_POINTS);
+
+		// Draw the vertex in the right position
+		glVertex2f(pointsList[i].x, pointsList[i].y);
+
+		glEnd();
+		#ifdef debug_graphics
+			cout << "\t\tDrew point " << i << endl;
+		#endif
+	}
+
+	// Draw coordinates of last point:
+	Point& p = pointsList.back();
+	printCoordinates(p.x, p.y);
+
+	#ifdef debug_graphics
+		cout << "\tDrew list" << endl;
+	#endif
+}
+
+void drawRectangle (float x1, float y1, float x2, float y2) {
+	float xLeft  = x1 < x2 ? x1 : x2;	// xLeft  = min (x1, x2)
+	float yUpper = y1 > y2 ? y1 : y2;	// yUpper = max (y1, y2)
+	float xRight = x1 > x2 ? x1 : x2;	// xRight = max (x1, x2)
+	float yLower = y1 < y2 ? y1 : y2;	// yLower = min (y1, y2)
+	
+	glBegin (GL_POLYGON);
+	glVertex2f (xLeft,  yLower);
+	glVertex2f (xLeft,  yUpper);
+	glVertex2f (xRight, yUpper);
+	glVertex2f (xRight, yLower);
+	glEnd ();
+}
+
+
+void drawText (float x, float y, int size, char *text_string){
+	void* font = GLUT_BITMAP_TIMES_ROMAN_10;
+	// Choose font size
+	switch (size) {
+		case 0:
+			font = GLUT_BITMAP_TIMES_ROMAN_24;
+			break;
+		default:
+			break;
+	}
+
+	// set the position of the text in the window using the x and y coordinates
+	glRasterPos2f(x,y);
+	// get the length of the string to display
+	//int len = text_string.Length();
+	int len = strlen(text_string);
+	//loop to display character by character 
+	for (int i = 0; i< len; i++){
+		glutBitmapCharacter(font, text_string [i]);
+	}
+}
+
+/*
+void drawText (float xPos, float yPos, char * textStr) {
+	void* font = GLUT_BITMAP_TIMES_ROMAN_10;
+	glRasterPos2f (xPos, yPos);
+	int i = 0;
+	while (textStr[i] != '\0' && i < 128) {
+		glutBitmapCharacter (font, textStr[i]);
+	}
+	if (i == 128) {
+		cout << "Error: drawText function encountered over 128 characters without a terminating null '\0' character.\n";
+		return;
+	}
+}
+*/
+
+//-------------------------------------------------------
+// A function to draw a letter identified by "char shape" at coordinates (xPos, yPos)
+//-------------------------------------------------------
+// void drawLetter(char letter, int xPos, int yPos) { // Version with default parameters
+	// drawLetter(letter, xPos, yPos, 10);
+// }
+void drawLetter(char letter, float xPos, float yPos, float size) {
+	//cout << "Drawing \"" << letter << "\"!" << endl;
+	glBegin (GL_POLYGON);
+	//glColor3f (1, 1, 1);
+	float deltaX;
+	float radius;
+	switch (letter) {
+		case 'A':
+			
+			break;
+		
+		case 'D':
+			
+			// Left rectangular side (separate polygon)
+			
+			glVertex2f (xPos, yPos); // Bottom left corner
+			glVertex2f (xPos, yPos + size); // top left corner
+			glVertex2f (xPos + (size/6), yPos + size); // top, on right corner
+			glVertex2f (xPos + (size/6), yPos); // bottom right
+			glEnd();
+			
+			
+			// Circular portion (separate polygon, to make the hole in the "D")
+			glBegin (GL_POLYGON);
+			
+			radius = size/2;	// Outer radius is size/2
+			
+			// Outer circle:
+			for (float deltaY = radius; deltaY > -1*radius; deltaY -= size/10) {
+				deltaX = sqrt((radius*radius) - (deltaY*deltaY));
+				glVertex2f (xPos + (size/6) + deltaX, yPos + (size/2) + deltaY);
+			}
+			
+			glVertex2f (xPos + (size/6), yPos + (size/6)); // Bottom inner corner of "D"
+			
+			// Inner circle
+			radius = size/3; //5*size/12; // Inner radius is size/2 - size/6 = 5*size/6
+			for (float deltaY = -1*radius; deltaY < radius; deltaY += size/10) {
+				deltaX = sqrt((radius*radius) - (deltaY*deltaY));
+				glVertex2f (xPos + (size/6) + deltaX, yPos + (size/2) + deltaY);
+			}
+			
+			
+			//glVertex2f (xPos + (size/6), yPos + (size/6)); // Bottom inner corner of "D"
+			
+			
+			
+			
+			// Left side. Same as "I" (fall through to the "I" case)
+			break;
+			
+		case 'I':
+			glVertex2f (xPos, yPos); // Bottom left corner
+			glVertex2f (xPos, yPos + size); // top left corner
+			glVertex2f (xPos + (size/6), yPos + size); // top, on right corner
+			glVertex2f (xPos + (size/6), yPos); // bottom right
+			break;
+		
+		case 'L':
+			// points on "L" start at bottom left corner, and go clockwise around
+			glVertex2f (xPos, yPos); //Bottom left corner of "L"
+			glVertex2f (xPos, yPos + size); // top left corner of "L"
+			glVertex2f (xPos + (size/6), yPos + size); // top, on right corner
+			glVertex2f (xPos + (size/6), yPos + (size/6)); // inner corner
+			glVertex2f (xPos + (size/2), yPos + (size/6)); // right side, tip on top of "heel" of L
+			glVertex2f (xPos + (size/2), yPos); // bottom right corner
+			
+			
+			
+			break;
+		
+		default:
+			
+			break;
+	}
+	glEnd();
+}
+
+//chrono::duration<int, milli> fractalAddPeriod = chrono::duration<int, milli>(10);
+chrono::duration <int, milli> PolygonAddPeriod = chrono::milliseconds(1000);	// Should add a polygon on average every 5 sec (5000 ms), based on randomness
+chrono::duration <int, milli> fractalAddPeriod = chrono::milliseconds(10);	// Should definately add a fractal point every millisecond
+int polygon_add_probability_ratio = chrono::milliseconds(PolygonAddPeriod) / chrono::milliseconds(fractalAddPeriod);
+
+void initFractalPoints();
+// TODO: Check lose conditions. If a player loses, then show the explosion animation
+void setFractalPointAddPeriod (int milliseconds_amount) {	// TODO: Set fractal point period to decrease as game goes on, to make it harder
+	if (milliseconds_amount < 0) {
+		cout << "setFractalPointAddPeriod error: Must enter a positive value for the number of milliseconds to add a fractal point, but not: " << milliseconds_amount << endl;
+		return;
+	}
+	if (milliseconds_amount > 60000) {
+		cout << "setFractalPointAddPeriod error: Must enter a positive value for the number of milliseconds to add a fractal point, but not over 60,000 (10 minutes): " << milliseconds_amount << endl;
+		return;
+	}
+
+	fractalAddPeriod = chrono::milliseconds(milliseconds_amount);
+}
+
+long lastFractalAdd = 0;
+
+void addFractalPoint () {
+	#ifdef debug_addFractalPoint
+		cout << "addFractalPoint called" << endl;
+	#endif
+
+	while (true) {	// Keep adding points throughout the program
+		// get both locks
+		//unique_lock<std::mutex> fractalLock(fractalPointsModify);
+		//unique_lock<std::mutex> attractorLock(attractorPointsModify);
+		//isAddingAttractorPoints.wait(fractalLock);
+		//isAddingFractalPoints.wait(attractorLock);
+		if (attractorPoints.size() == 0 || fractalPoints.size() == 0) {
+			
+
+			//perror ("Cannot  add new attractor point if the first one has not been placed\n");
+			cout << "Cannot add new fractal point if there are not any fractal points or attractor points\n" << endl;
+			cout << "There most be at least 1 attractor point and at least one fractalpoint to add more fractal points. There are currently "
+			 << fractalPoints.size() << " fractal points and " << attractorPoints.size() << " attractor points." << endl;
+			// release both locks
+			//fractalLock.unlock();
+			//attractorLock.unlock();
+			// notify waiting threads that locks were released
+			//isAddingAttractorPoints.notify_one();
+			//isAddingFractalPoints.notify_one();
+			
+			this_thread::sleep_for(fractalAddPeriod);
+			continue;
+		}
+
+		
+		// Choose an attractor point to get the average of
+		int chosenAttractor = rand() % attractorPoints.size();
+
+		// TODO: This section of code should not be interrupted, or it can cause a segmentation fault of the attractor points are cleared 
+		// in this section. Because Point& attractor would point to a deleted point
+		Point attractor = attractorPoints[chosenAttractor];
+		Point lastFractalPoint = fractalPoints.back();
+		
+		// release attractor lock
+		
+		//attractorLock.unlock();
+		// notify waiting threads that attractor lock was released
+		//isAddingAttractorPoints.notify_one();
+		
+
+		// Find midpoint between last fractal point and the chosen attractor point.
+		float midX = (attractor.x + lastFractalPoint.x) / 2;
+		float midY = (attractor.y + lastFractalPoint.y) / 2;
+
+		// Create the new fractal point at the midpoint, and add it to the fractal points list
+		fractalPoints.push_back(Point(midX, midY, red, green, blue));
+		
+		// unlock fractal points
+		//fractalLock.unlock();
+		// notify waiting threads that fractal lock was released
+		//isAddingFractalPoints.notify_one();
+		
+		// After adding a new point, check if it is inside any of the generated polygons. If so, then decrease the score. Or else, increase the score.
+		for (list<Polygon>::iterator it = allPolygons.begin(); it != allPolygons.end(); it++) {
+			if (it->contains(midX, midY)) {
+				score--;
+			}
+		}
+		
+		// Check if score is 0
+		if (score <= 0) {
+			score = 0;
+			char loseMessage [] = "You Lose!";
+			glColor3f(1.0f, 0.0f, 0.0f);	// Ensure text is red
+			drawText (-0.50f, 0.0f, 0, loseMessage);
+			this_thread::sleep_for(chrono::minutes(3));	// wait for 3 minutes before closing
+			exit(0);	// End program
+		}
+
+		// With a certain probability generate a new polygon:
+		// Should generate a polygon on average of once every 5 seconds (5000 milliseconds)
+		if (rand() % polygon_add_probability_ratio == 0) {
+			allPolygons.push_back(Polygon(0.35f));	// Can adjust how far adjacent points in polygon are from each other, on average
+		}
+
+		// Helpful print statement
+		/*
+		auto currentTime = chrono::high_resolution_clock::now();
+		chrono::duration<double, std::milli> millis = currentTime;
+		cout << "Added fractal point #" << fractalPoints.size() << " at time " << millis.count() << "ms" << endl;
+		*/
+		//int elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(chrono::high_resolution_clock::now()).count();
+		//int currentTime = chrono::high_resolution_clock::now().count();	// might not be in ms
+		//int currentTime = chrono::milliseconds(chrono::system_clock::now());
+
+		long currentTime = chrono::system_clock::now().time_since_epoch().count();
+		//int currentTime = chrono::system_clock::duration
+		#ifdef debug_addFractalPoint
+			cout << "Fractal thread: Added fractal point #" << fractalPoints.size() << " at time " << currentTime - lastFractalAdd 
+			<< " ms attracted to attractor #" << chosenAttractor << endl;
+		#endif
+		lastFractalAdd = currentTime;
+		// Make this thread sleep until it is time to place the next point. The point placement rate is defined by variable __ 
+		glutPostRedisplay();
+		this_thread::sleep_for(fractalAddPeriod);
+	}	
+}
+
+// Displays point counter at top of window
+void indicateNumberOfPoints () {
+	char buffer [100];
+	//int len = sprintf (buffer, "Attractors: %d, Fractal points: %d", attractorPoints.size(), fractalPoints.size());
+	int len = sprintf (buffer, "Attractors: %d, Polygons: %d, Score: %d, Fractal points: %d", attractorPoints.size(), allPolygons.size(), score, fractalPoints.size());
+	drawText(-0.25f, 0.75, 1, buffer);
+}
+
+// Prints the coordinates of a point, at that point
+void printCoordinates (float mx, float my) {
+	char buffer [30];
+	int len = sprintf(buffer, "(%f, %f)", mx, my);
+	drawText (mx, my, 1, buffer);
+}
+
+void initFractalPoints() {
+	// Acquire lock to add to fractalPoints
+
+	// Randomly choose coordinates of 1st point to place
+	fractalPoints.push_back(Point(randFloat (-1.0f, 1.0f), randFloat (-1.0f, 1.0f), 0.0f, 1.0f, 0.0f));
+
+	// Create a thread that adds new random points asynchronously, for the duration of the program. This thread should call addFractalPoint()
+	cout << "Creating a thread to add fractal points" << endl;
+	fractalPointThread = thread(addFractalPoint);
+	//fractalPointThread.star
+	fractalPointThread.detach();
+	
+	//thread fractalPointThread2 (addFractalPoint);
+	
+	//fractalPointThread2.detach();
+}
+
+
+
+
+
+
+
+
 
 App::App(int argc, char** argv): GlutApp(argc, argv){
     
@@ -8,11 +419,93 @@ App::App(int argc, char** argv): GlutApp(argc, argv){
     //fastExplosion = new AnimatedRect("fireball.bmp", 6, 6, 10,   0.5, 0.5, 0.5, 0.5);
     //explosion->playLoop();
     //fastExplosion->playLoop();
+	
+	
+	// Setup some OpenGL options
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_POINT_SMOOTH);
+	glEnable(GL_LINE_SMOOTH);
+	
+	
+	
+
 }
 
 void App::draw() {
     //explosion->draw(0.15);
     //fastExplosion->draw(0.15);
+	
+		// Clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Set background color to white
+	glClearColor(1.0, 1.0, 1.0, 1.0);
+	
+	//glClearColor(0.0, 0.0, 0.0, 0.0);
+	// Set up the transformations stack
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	// Set the color to the current values of the global vars
+	glColor3f(red, green, blue);
+
+	// // Set point size
+	glPointSize(6);
+
+	//Draw my initials
+	// glColor3f (0.0, 1.0, 0.0);
+	// drawLetter ('D', 0.0, 0.0, 0.4);
+	// glColor3f (0.0, 0.0, 1.0);
+	// drawLetter ('L', 0.4, 0.0, 0.4);
+	glColor3f(red, green, blue);
+	
+	// Draw the attractorPoints
+	//unique_lock<std::mutex> attractorLock(attractorPointsModify);	// Get attractor points lock
+	#ifdef debug_point_list_structures
+		cout << "Calling drawPoints(attractorPoints); which has size " << attractorPoints.size() << endl;
+	#endif
+	drawPoints(attractorPoints);
+	//attractorLock.unlock();	// Unlock the attractor points
+	//isAddingAttractorPoints.notify_one();	// Notify waiting threads
+
+	// Draw the fractalPoints
+	glColor3f (0.0, 1.0, 0.0);
+	//unique_lock<std::mutex> fractalLock(fractalPointsModify);	// Get the fractal points lock
+	#ifdef debug_point_list_structures
+		cout << "Calling drawPoints(fractalPoints); which has size " << fractalPoints.size() << endl;
+	#endif
+	drawPoints(fractalPoints);
+	//fractalLock.unlock();	// Unclock the fractal points
+	//isAddingFractalPoints.notify_one();	// Notify waiting threads
+	
+	// Draw all polygons:
+	for (list<Polygon>::iterator it = allPolygons.begin(); it != allPolygons.end(); it++) {
+		it->draw();
+	}
+
+	//drawRectangle (-0.98, 0.98, -0.68, 0.88);
+	//drawRectangle (-0.98, 0.83, -0.68, 0.73);
+	//polyPtr->draw();
+
+	
+	// Draw a point at the bottom-right
+	//glBegin(GL_POINTS);
+	//glVertex2f(-0.8, -0.8);
+	//glEnd();
+
+	// TODO: Draw text indicating the number of points placed on the top right corner
+	//char hiStr [] = "Hi!";
+	//drawText (-0.75, 0.55, hiStr);
+
+	//print(0.75, 0.75, 0, hiStr);
+	
+	indicateNumberOfPoints ();
+
+	// We have been drawing everything to the back buffer
+	// Swap the buffers to see the result of what we drew
+	glFlush();
+	glutSwapBuffers();
+	
 }
 
 void App::keyDown(unsigned char key, float x, float y){
@@ -24,6 +517,88 @@ void App::keyDown(unsigned char key, float x, float y){
         //fastExplosion->playOnce();
         //explosion->playOnce();
     }
+	switch (key) {
+		// Space was pressed. Erase all attractorPoints
+	case ' ':
+		// Pause fractalPointThread until initFractalPoints is called again
+		// TODO : Add a condition variable or lock to suspend the fractalPointThread until the attractorPoints size and fractalPoints size is greater than 0
+		//fractalPointThread.terminate();
+		//fractalPointThread.sleep_for(fractalAddPeriod);
+
+		// Clear all points
+
+		//Get both locks to add attractor points and fractal points
+
+		attractorPoints.clear();
+		fractalPoints.clear();
+		
+		//release both locks
+
+		break;
+		// "d" was pressed. Delete fractal points
+	case 'd':	// TODO: Fix segmentation fault that this causes
+		// Resume fractalPointThread, if it is sleeping
+
+		initFractalPoints();
+		break;
+
+		// Escape was pressed. Quit the program
+	case 27:
+		exit(0);
+		break;
+
+		// The "r" key was pressed. Set global color to red
+	case 'r':
+		red = 1.0;
+		green = 0.0;
+		blue = 0.0;
+		break;
+
+		// The "g" key was pressed. Set global color to green
+	case 'g':
+		red = 0.0;
+		green = 1.0;
+		blue = 0.0;
+		break;
+
+		// The "b" key was pressed. Set global color to blue
+	case 'b':
+		red = 0.0;
+		green = 0.0;
+		blue = 1.0;
+		break;
+
+		// The "k" key was pressed. Set global color to black
+	case 'k':
+		red = 0.0;
+		green = 0.0;
+		blue = 0.0;
+		break;
+
+		// The "w" key was pressed. Set global color to white
+	case 'w':
+		red = 1.0;
+		green = 1.0;
+		blue = 1.0;
+		break;
+		
+	}
+	
+}
+
+void App::leftMouseDown (float mx, float my) {
+	
+
+		
+		//unique_lock<std::mutex> attractorLock(attractorPointsModify);
+		attractorPoints.push_back(Point(mx, my, red, green, blue));
+		//attractorLock.unlock();
+		// notify waiting threads that locks were released
+		//isAddingAttractorPoints.notify_one();
+
+		// Show mouse coordinates at this position
+		//printCoordinates (mx, my);
+	
 }
 
 App::~App(){

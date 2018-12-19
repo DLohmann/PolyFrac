@@ -27,6 +27,7 @@ Once in a while, the rate at which fractal points are placed increases dramatica
 - During the CSE 165 final class demo, form a competition to see who can get the highest score on this game. Then give out a prize for this highest score (should log player names for the leaderboard).
 - Make a 3D version of this game?
 - Maybe fractal points should change color as they get older, and are about to be removed
+- Over time, make the fractal points and the attractor points age, changing colors, and disappear. This will remove clutter from the screen, allowing for more new points and fractals that will affect the game.
 
 
 
@@ -36,8 +37,10 @@ https://docs.google.com/document/d/1cf45kmz3oNQ7RqiqdlUyD_tw7w5lOnuN8sXz_nvTblA/
 
 # TO DO:
 - Create a CMakeLists.txt file to compile the template on different systems using CMake.
-- Add code to place the user-generated "attractor" points.
-- Randomly generate the "fractal" points.
+- Fix the polygon class contains function, so that it only detects points that are within the polygon, and ensures to detect all of them. Currently this function does not detect all of them, and does detect some points outside of the polygon.
+- Add explosion animation when the player loses.
+- Add lock and condition variable so that the main thread does not empty/clear the fractal points list while the fractal thread is accessing it.
+
 
 # Controls:
 - [Click] : Place an attractor point.
